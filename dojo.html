@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dojo Interface (Cloud Buffer)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; padding: 12px; margin: 0; color: #333; }
+        .card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        label { font-weight: bold; font-size: 14px; color: #555; display: block; margin-bottom: 5px; }
+        select, input { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; background-color: #fff; }
+        input:focus, select:focus { border-color: #007bff; outline: none; }
+        
+        /* Navigazione a Tab */
+        .tab-container { display: flex; margin-bottom: 15px; background: #e9e9f0; border-radius: 8px; padding: 4px; }
+        .tab-btn { flex: 1; padding: 10px; text-align: center; background: none; border: none; font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 6px; color: #666; }
+        .tab-btn.active { background: white; color: #007bff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Griglie responsive per mobile */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        
+        h3 { margin: 0 0 12px 0; font-size: 16px; color: #111; border-left: 4px solid #007bff; padding-left: 8px; }
+        .section-divider { height: 1px; background: #eee; margin: 15px 0; }
+        
+        button.submit-btn { width: 100%; background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; padding: 14px; border-radius: 8px; transition: background 0.2s; }
+        button.submit-btn:active { background-color: #1e7e34; }
+        
+        #status_salti, #status_completo { text-align: center; font-weight: bold; margin-top: 10px; font-size: 15px; min-height: 20px; }
+    </style>
+</head>
+<body>
+
+    <script>
+        const SUPABASE_URL = "---";
+        const SUPABASE_KEY = "---";
+
+        // Inizializzazione Client
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    </script>
+
+    <div class="card">
+        <label for="global_id_atleta">INSERIRE PIN ATLETA (ID)</label>
+        <input type="number" id="global_id_atleta" placeholder="" inputmode="numeric" style="text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 2px;">
+        
+        <label for="global_peso_atleta">PESO ATLETA PER QUESTO TEST (KG)</label>
+        <input type="number" id="global_peso_atleta" value="70.0" step="0.1" inputmode="decimal" style="text-align: center; font-size: 18px; font-weight: bold;">
+    </div>
+
+    <div class="tab-container">
+        <button class="tab-btn active" onclick="switchTab('modulo_salti', this)">1. Salti (SNC)</button>
+        <button class="tab-btn" onclick="switchTab('modulo_completo', this)">2. Test Completo</button>
+    </div>
+
+    <div id="modulo_salti" class="tab-content active">
+        <div class="card">
+            <h3>Squat Jump (SJ)</h3>
+            <div class="grid-2">
+                <div><label>SJ 1 (cm)</label><input type="number" id="sj1" step="0.1" value="40.0"></div>
+                <div><label>SJ 2 (cm)</label><input type="number" id="sj2" step="0.1" value="40.0"></div>
+            </div>
+            
+            <div class="section-divider"></div>
+            
+            <h3>Countermovement Jump (CMJ)</h3>
+            <div class="grid-2">
+                <div><label>CMJ 1 (cm)</label><input type="number" id="cmj1" step="0.1" value="40.0"></div>
+                <div><label>CMJ 2 (cm)</label><input type="number" id="cmj2" step="0.1" value="40.0"></div>
+            </div>
+            
+            <button class="submit-btn" onclick="inviaSalti()">Invia Salti al Cloud</button>
+            <div id="status_salti"></div>
+        </div>
+    </div>
+
+    <div id="modulo_completo" class="tab-content">
+        <div class="card">
+            <h3>1. Proiezioni in Rapidità (ms)</h3>
+            <div class="grid-3">
+                <div><label>T1</label><input type="number" id="vp1" value="1000" step="10"></div>
+                <div><label>T2</label><input type="number" id="vp2" value="1000" step="10"></div>
+                <div><label>T3</label><input type="number" id="vp3" value="1000" step="10"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>2. Tabata (Frequenza Cardiaca - BPM)</h3>
+            <div class="grid-2">
+                <div><label>HR Inizio</label><input type="number" id="hr_inizio_tabata" value="150"></div>
+                <div><label>HR Fine (Max)</label><input type="number" id="hr_fine_tabata" value="180"></div>
+            </div>
+            <div class="grid-3" style="margin-top: 5px;">
+                <div><label>R1 (1m)</label><input type="number" id="hr_tabata_r1" value="140"></div>
+                <div><label>R2 (2m)</label><input type="number" id="hr_tabata_r2" value="130"></div>
+                <div><label>R3 (3m)</label><input type="number" id="hr_tabata_r3" value="120"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>3. SJTF (Proiezioni per Blocco)</h3>
+            <div class="grid-4">
+                <div><label>B1 (15s)</label><input type="number" id="sjtf_b15_1" value="5"></div>
+                <div><label>B2 (30s)</label><input type="number" id="sjtf_b30_1" value="10"></div>
+                <div><label>B3 (30s)</label><input type="number" id="sjtf_b30_2" value="10"></div>
+                <div><label>B4 (15s)</label><input type="number" id="sjtf_b15_2" value="5"></div>
+            </div>
+            
+            <div class="section-divider"></div>
+            
+            <h3>4. SJTF (Frequenza Cardiaca - BPM)</h3>
+            <div class="grid-4">
+                <div><label>Inizio</label><input type="number" id="hr_inizio_sjtf" value="110"></div>
+                <div><label>Metà</label><input type="number" id="hr_meta_sjtf" value="160"></div>
+                <div><label>Fine</label><input type="number" id="hr_fine_sjtf" value="185"></div>
+                <div><label>Rec (1m)</label><input type="number" id="hr_1min_post_sjtf" value="150"></div>
+            </div>
+            
+            <button class="submit-btn" onclick="inviaCompleto()">Invia Test Completo al Cloud</button>
+            <div id="status_completo"></div>
+        </div>
+    </div>
+
+<script>
+        // Funzione per generare il timestamp corretto (Fuso Orario Locale)
+        function getLocalTimestamp() {
+            let now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            return now.toISOString().slice(0, 19).replace('T', ' ');
+        }
+
+        // Gestione cambio Tab
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // Trasmissione MODULO 1: SALTI
+        async function inviaSalti() {
+            const status = document.getElementById("status_salti");
+            status.style.color = "#007bff";
+            status.innerText = "Trasmissione in corso...";
+
+            const payload = {
+                id_atleta: document.getElementById("global_id_atleta").value,
+                timestamp: getLocalTimestamp(),
+                sj_1: parseFloat(document.getElementById("sj1").value),
+                sj_2: parseFloat(document.getElementById("sj2").value),
+                cmj_1: parseFloat(document.getElementById("cmj1").value),
+                cmj_2: parseFloat(document.getElementById("cmj2").value),
+                peso_al_test: parseFloat(document.getElementById("global_peso_atleta").value)
+            };
+
+            const { data, error } = await supabaseClient.from('buffer_salti').insert([payload]);
+
+            if (error) {
+                status.style.color = "#dc3545";
+                status.innerText = "Errore: " + error.message;
+            } else {
+                status.style.color = "#28a745";
+                status.innerText = "✅ Salto memorizzato nel Cloud!";
+                setTimeout(() => { status.innerText = ""; }, 3000);
+            }
+        }
+
+        // Trasmissione MODULO 2: TEST COMPLETO
+        async function inviaCompleto() {
+            const status = document.getElementById("status_completo");
+            status.style.color = "#007bff";
+            status.innerText = "Trasmissione in corso...";
+
+            const payload = {
+                id_atleta: document.getElementById("global_id_atleta").value, // CORRETTO
+                timestamp: getLocalTimestamp(),
+                vp_t1: parseInt(document.getElementById("vp1").value),
+                vp_t2: parseInt(document.getElementById("vp2").value),
+                vp_t3: parseInt(document.getElementById("vp3").value),
+                hr_inizio_tabata: parseInt(document.getElementById("hr_inizio_tabata").value),
+                hr_fine_tabata: parseInt(document.getElementById("hr_fine_tabata").value),
+                hr_tabata_r1: parseInt(document.getElementById("hr_tabata_r1").value),
+                hr_tabata_r2: parseInt(document.getElementById("hr_tabata_r2").value),
+                hr_tabata_r3: parseInt(document.getElementById("hr_tabata_r3").value),
+                sjtf_b15_1: parseInt(document.getElementById("sjtf_b15_1").value),
+                sjtf_b30_1: parseInt(document.getElementById("sjtf_b30_1").value),
+                sjtf_b30_2: parseInt(document.getElementById("sjtf_b30_2").value),
+                sjtf_b15_2: parseInt(document.getElementById("sjtf_b15_2").value),
+                hr_inizio_sjtf: parseInt(document.getElementById("hr_inizio_sjtf").value),
+                hr_meta_sjtf: parseInt(document.getElementById("hr_meta_sjtf").value),
+                hr_fine_sjtf: parseInt(document.getElementById("hr_fine_sjtf").value),
+                hr_1min_post_sjtf: parseInt(document.getElementById("hr_1min_post_sjtf").value),
+                peso_al_test: parseFloat(document.getElementById("global_peso_atleta").value)
+            };
+
+            const { data, error } = await supabaseClient.from('buffer_completo').insert([payload]);
+
+            if (error) {
+                status.style.color = "#dc3545";
+                status.innerText = "Errore: " + error.message;
+            } else {
+                status.style.color = "#28a745";
+                status.innerText = "✅ Test Completo memorizzato nel Cloud!";
+                setTimeout(() => { status.innerText = ""; }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
