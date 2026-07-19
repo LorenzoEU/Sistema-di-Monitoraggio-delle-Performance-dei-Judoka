@@ -14,6 +14,6 @@ Il terzo livello è il Master Data Store locale: un database SQLite locale sul P
 
 ## Business & Technical Value
 L'architettura produce tre risultati misurabili:
-•	Pseudonimizzazione ad alto isolamento: Nessun dato nominativo viene esposto sul cloud. Il sistema si basa su un rigoroso disaccoppiamento dei dati, dove il dizionario di de-anonimizzazione che collega il PIN all'identità risiede esclusivamente sul Master Data Store locale.
-•	Costo Infrastrutturale Pari a Zero: Sfruttando Supabase esclusivamente come buffer transitorio (i dati restano online pochi minuti prima di essere scaricati e cancellati), il sistema rientra ampiamente nei tier gratuiti del servizio. 
-•	Attrito di Adozione Inesistente: Il front-end si apre con interfaccia browser dello smartphone. Non ci sono account da creare, aggiornamenti o ulteriori possibili problemi legati a un App terza, compresa la poca intuitività e i primi attriti.
+- Pseudonimizzazione ad alto isolamento: Nessun dato nominativo viene esposto sul cloud. Il sistema si basa su un rigoroso disaccoppiamento dei dati, dove il dizionario di de-anonimizzazione che collega il PIN all'identità risiede esclusivamente sul Master Data Store locale.
+- Costo Infrastrutturale Pari a Zero: Sfruttando Supabase esclusivamente come buffer transitorio (i dati restano online pochi minuti prima di essere scaricati e cancellati), il sistema rientra ampiamente nei tier gratuiti del servizio.
+- Attrito di Adozione Inesistente: Il front-end si apre con interfaccia browser dello smartphone. Non ci sono account da creare, aggiornamenti o ulteriori possibili problemi legati a un App terza, compresa la poca intuitività e i primi attriti.
